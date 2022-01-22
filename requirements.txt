@@ -1,0 +1,13 @@
+Flask==2.0.2
+
+pandas
+
+opencv-python-headless
+
+matplotlib
+
+seaborn
+
+
+
+flask-cors
