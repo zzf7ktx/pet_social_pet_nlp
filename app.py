@@ -1,3 +1,4 @@
+from typing import List
 from tqdm import tqdm
 import demoji
 from emoji import demojize, UNICODE_EMOJI
