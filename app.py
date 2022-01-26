@@ -115,8 +115,7 @@ if __name__ == '__main__':
     print('Starting webservice...')
     # Getting directory containing models from command args (or default 'models_train')
     models_directory = 'models_train'
-    if len(sys.argv) > 1:
-        models_directory = sys.argv[1]
+
     print(f'Watching for models under {models_directory}...')
     for r, d, f in os.walk(models_directory):
         for file in f:
