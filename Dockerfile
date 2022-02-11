@@ -31,4 +31,6 @@ COPY . /app
 
 RUN pip install -r requirements.txt
 
-ENTRYPOINT ["python", "app.py"]
+#ENTRYPOINT ["python", "app.py"]
+ENTRYPOINT ["gunicorn"]
+CMD ["-w", "1", "-t", "10000", "-b", "0.0.0.0:5000", "main:app"]

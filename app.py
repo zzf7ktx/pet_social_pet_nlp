@@ -31,12 +31,15 @@ app = Flask(__name__)
 cors = CORS(app, supports_credentials=True)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-
 phobert_base = AutoModel.from_pretrained("vinai/phobert-base")
 tokenizer_base = AutoTokenizer.from_pretrained(
     "vinai/phobert-base", use_fast=False)
 rdrsegmenter = VnCoreNLP("vncorenlp/VnCoreNLP-1.1.1.jar",
                          annotators="wseg", max_heap_size='-Xmx500m')
+model_path = os.path.join('./models_train', 'model_1.pkl')
+model_file = open(model_path, 'rb')
+model = pickle.load(model_file)
+dictOfModels['model_1'] = model
 
 
 def tokenize_sentence(sent: str) -> str:
@@ -94,7 +97,7 @@ def get_prediction(text, model):
     return y_pred
 
 
-@app.route('/text', methods=['POST'])
+@app.route('/predict', methods=['POST'])
 @cross_origin(supports_credentials=True)
 def predict_text():
     # Get text
@@ -103,36 +106,54 @@ def predict_text():
     text = request.form.get("text")
     if text == None:
         raise BadRequest("Missing file parameter!")
+    choice = request.form.get('model_choice')
+    model = dictOfModels['model_1']
     result = get_prediction(
-        text, dictOfModels[request.form.get("model_choice")])[0]
+        text, model)[0]
     print('result', result)
     response = json.dumps({'result': result}, indent=4)
     return Response(response, mimetype='application/json')
 
 
+@app.route('/')
+@cross_origin(supports_credentials=True)
+def hello_world():
+    statement = 'Hello World!'
+    return statement
+
+
 # Entry
+
+
+# starting app
 if __name__ == '__main__':
     print('Starting webservice...')
+    phobert_base = AutoModel.from_pretrained("vinai/phobert-base")
+    tokenizer_base = AutoTokenizer.from_pretrained(
+        "vinai/phobert-base", use_fast=False)
+    rdrsegmenter = VnCoreNLP("vncorenlp/VnCoreNLP-1.1.1.jar",
+                             annotators="wseg", max_heap_size='-Xmx500m')
+    model_path = os.path.join('./models_train', 'model_1.pkl')
+    model_file = open(model_path, 'rb')
+    model = pickle.load(model_file)
+    dictOfModels['model_1'] = model
     # Getting directory containing models from command args (or default 'models_train')
-    models_directory = 'models_train'
 
-    print(f'Watching for models under {models_directory}...')
-    for r, d, f in os.walk(models_directory):
-        for file in f:
-            if ".pkl" in file:
-                # example: file = "model1.pt"
-                # the path of each model: os.path.join(r, file)
-                model_name = os.path.splitext(file)[0]
-                model_path = os.path.join(r, file)
-                model_file = open(model_path, 'rb')
-                print(
-                    f'Loading model {model_path} with path {model_path}...')
-                dictOfModels[model_name] = pickle.load(model_file)
-                # you would obtain: dictOfModels = {"model1" : model1 , etc}
+    # print(f'Watching for models under {models_directory}...')
+    # for r, d, f in os.walk(models_directory):
+    #     for file in f:
+    #         if ".pkl" in file:
+    #             # example: file = "model1.pt"
+    #             # the path of each model: os.path.join(r, file)
+    #             model_name = os.path.splitext(file)[0]
+    #             model_path = os.path.join(r, file)
+    #             model_file = open(model_path, 'rb')
+    #             print(
+    #                 f'Loading model {model_path} with path {model_path}...')
+    #             dictOfModels[model_name] = pickle.load(model_file)
+    #             # you would obtain: dictOfModels = {"model1" : model1 , etc}
 
     print(
         f'Server now running on ')
-
-    # starting app
     port = int(os.environ.get('PORT', 5000))
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=port)
